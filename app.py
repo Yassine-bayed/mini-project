@@ -2,12 +2,23 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 app.secret_key = 'ta_cle_secrete_pour_flash'  # nécessaire pour flash messages
 
 mongo = PyMongo(app)
+
+# Folder to save uploaded images
+UPLOAD_FOLDER = os.path.join('static', 'images')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def index():
@@ -43,10 +54,20 @@ def add_product():
         description = request.form.get('description')
         price = request.form.get('price')
         stock = request.form.get('stock')
-        category_name = request.form.get('category')
-        image = request.form.get('image') or 'images/default.jpg'  # image par défaut
+        category_id = request.form.get('category')
 
-        if not (name and description and price and stock and category_name):
+        # Handle file upload
+        file = request.files.get('image')
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            image_path = f'images/{filename}'
+        else:
+            # Use default image if no valid file uploaded
+            image_path = 'images/notfound.png'
+
+        # Validate required fields
+        if not (name and description and price and stock and category_id):
             flash('Veuillez remplir tous les champs obligatoires', 'danger')
             return render_template('add_product.html', categories=categories)
 
@@ -57,7 +78,7 @@ def add_product():
             flash('Prix doit être un nombre et stock un entier', 'danger')
             return render_template('add_product.html', categories=categories)
 
-        category_doc = mongo.db.categories.find_one({"name": category_name})
+        category_doc = mongo.db.categories.find_one({"_id": ObjectId(category_id)})
         if not category_doc:
             flash('Catégorie invalide', 'danger')
             return render_template('add_product.html', categories=categories)
@@ -71,7 +92,7 @@ def add_product():
                 "id": category_doc["_id"],
                 "name": category_doc["name"]
             },
-            "image": image,
+            "image": image_path,
             "date_added": datetime.utcnow()
         }
 
@@ -80,6 +101,7 @@ def add_product():
         return redirect(url_for('index'))
 
     return render_template('add_product.html', categories=categories)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
