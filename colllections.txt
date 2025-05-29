@@ -1,0 +1,51 @@
+if (db.categories) db.categories.drop();
+if (db.products) db.products.drop();
+
+const categories = db.categories.insertMany([
+  { name: "Informatique", description: "Ordinateurs, accessoires et périphériques" },
+  { name: "Électroménager", description: "Appareils pour la maison" },
+  { name: "Livres", description: "Livres de tous genres" }
+]);
+
+const catIds = categories.insertedIds;
+
+db.products.insertMany([
+  {
+    name: "Ordinateur Portable",
+    description: "Portable puissant pour le travail et le jeu.",
+    price: 7500.50,
+    stock: 5,
+    category: { 
+      id: catIds[0],      
+      name: "Informatique" 
+    },
+    image: "images/laptop.jpg",
+    date_added: new Date("2025-05-01T10:00:00Z")
+  },
+  {
+    name: "Mixeur",
+    description: "Mixeur puissant pour la cuisine.",
+    price: 350.00,
+    stock: 12,
+    category: { 
+      id: catIds[1],      
+      name: "Électroménager"
+    },
+    image: "images/mixer.jpg",
+    date_added: new Date("2025-05-10T08:30:00Z")
+  },
+  {
+    name: "Roman Policier",
+    description: "Un roman captivant plein de suspense.",
+    price: 120.00,
+    stock: 20,
+    category: { 
+      id: catIds[2],      
+      name: "Livres"
+    },
+    image: "images/book.jpg",
+    date_added: new Date("2025-05-15T14:00:00Z")
+  }
+]);
+
+print("Database mini_catalogue seeded with categories and products including category IDs.");

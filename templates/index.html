@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini Catalogue</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}" />
+</head>
+<body>
+  <header>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('index') }}">Mini Catalogue</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link{% if request.endpoint == 'index' %} active{% endif %}" href="{{ url_for('index') }}">Accueil</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link{% if request.endpoint == 'add_product' %} active{% endif %}" href="{{ url_for('add_product') }}">Ajouter un produit</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
+
+  <main class="container mt-4">
+    <h1 class="text-center mb-4">Catalogue de Produits</h1>
+
+    <!-- Filtres -->
+    <form method="get" class="row mb-4 g-3 align-items-center">
+      <div class="col-auto">
+        <label for="category" class="form-label">Catégorie :</label>
+        <select class="form-select" id="category" name="category" onchange="this.form.submit()">
+          <option value="all">Toutes les catégories</option>
+          {% for category in categories %}
+            <option value="{{ category.name }}" {% if selected_category == category.name %}selected{% endif %}>{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <label for="sort" class="form-label">Trier par prix :</label>
+        <select class="form-select" id="sort" name="sort" onchange="this.form.submit()">
+          <option value="">--</option>
+          <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Croissant</option>
+          <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Décroissant</option>
+        </select>
+      </div>
+    </form>
+
+    <!-- Grille de produits -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+      {% for product in products %}
+        <div class="col">
+          <div class="card h-100">
+            <img src="{{ url_for('static', filename=product.image or 'images/default.png') }}" class="card-img-top" alt="Produit">
+            <div class="card-body">
+              <h5 class="card-title">{{ product.name }}</h5>
+              <p class="card-text">{{ product.description[:80] }}...</p>
+              <p><strong>Prix :</strong> {{ product.price }} MAD</p>
+              <p><strong>Catégorie :</strong> {{ product.category.name }}</p>
+              <p><strong>Stock :</strong> {{ product.stock }}</p>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <p class="text-muted">Aucun produit trouvé.</p>
+      {% endfor %}
+    </div>
+  </main>
+
+  <footer class="text-center mt-4 mb-4">
+    &copy; 2025 Mini Catalogue
+  </footer>
+</body>
+</html>
